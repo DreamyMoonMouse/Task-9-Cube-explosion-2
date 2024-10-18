@@ -1,30 +1,33 @@
 using UnityEngine;
 using UnityEngine.Serialization;
+using System;
+using UnityEngine.Events;
 
+[RequireComponent(typeof(Renderer))]
 
 public class Cube : MonoBehaviour
 {
-    [SerializeField] private Spawner spawner;
-    
-    private float _splitChance = 1f;
+    public UnityEvent<Cube> OnCubeClicked;
     private float _chanceDenominator = 2f;
     
-    public void Initialize(Vector3 position, Vector3 scale, float splitChance, Color color)
+    public float SplitChance { get; private set; } = 1f;
+    
+    private void OnMouseDown()
+    {
+        OnCubeClicked.Invoke(this);
+        Destroy(gameObject);
+    }
+    public void Initialize(Vector3 position, Vector3 scale, float splitChance)
     {
         transform.position = position;
         transform.localScale = scale;
-        _splitChance = splitChance/_chanceDenominator;
-        GetComponent<Renderer>().material.color = color;
-    }
-
-    private void OnMouseDown()
-    {
-        spawner.OnCubeClicked(this);
+        SplitChance = splitChance/_chanceDenominator;
+        SetRandomColor();
     }
     
-    public float GetSplitChance()
+    private void SetRandomColor()
     {
-        return _splitChance;
+        GetComponent<Renderer>().material.color =  UnityEngine.Random.ColorHSV();
     }
 }
 
