@@ -1,12 +1,14 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class Explosion
 {
     private float _baseExplosionForce = 300f;
     private float _baseExplosionRadius = 2f;
     private float _sizeEffectFactor = 1f;
+    private float _splitExplosionForceMultiplier = 0.01f; 
     
-    public void Explode(Cube clickedCube)
+    public void Explode(List<Rigidbody> targetCubes, bool isSplit, Cube clickedCube)
     {
         Vector3 explosionPosition = clickedCube.transform.position;
         float cubeSizeFactor = _sizeEffectFactor / clickedCube.transform.localScale.magnitude;
@@ -14,11 +16,25 @@ public class Explosion
         float explosionRadius = _baseExplosionRadius * cubeSizeFactor;
         Collider[] colliders = Physics.OverlapSphere(explosionPosition, _baseExplosionRadius);
 
-        foreach (var collider in colliders)
+        if (isSplit)
         {
-            if (collider.TryGetComponent<Rigidbody>(out Rigidbody rigidbody) && rigidbody.gameObject != clickedCube.gameObject)
+            foreach (Rigidbody rigidbody in targetCubes)
             {
-                rigidbody.AddExplosionForce(explosionForce, explosionPosition, explosionRadius);
+                if (rigidbody != null)
+                {
+                    Vector3 direction = Random.insideUnitSphere.normalized;
+                    rigidbody.AddForce(direction * explosionForce* _splitExplosionForceMultiplier, ForceMode.Impulse);
+                }
+            }
+        }
+        else
+        {
+            foreach (var collider in colliders)
+            {
+                if (collider.TryGetComponent(out Rigidbody rigidbody) && rigidbody.gameObject != clickedCube.gameObject)
+                {
+                    rigidbody.AddExplosionForce(explosionForce, explosionPosition, explosionRadius);
+                }
             }
         }
     }
